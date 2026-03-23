@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <!-- Modern Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Popup Notification Overlay -->
+    <div id="notification-overlay" class="notification-overlay hidden">
+        <div class="notification-box" id="notification-box">
+            <i class="fa-solid fa-circle-check" id="notification-icon"></i>
+            <p id="notification-message">Message</p>
+        </div>
+    </div>
+
+    <!-- Global Loading Overlay -->
+    <div id="global-loading-overlay" class="loading-overlay hidden">
+        <div class="global-spinner">
+            <i class="fa-solid fa-spinner"></i>
+            <p id="loading-message">Processing...</p>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div id="app-container" class="app-container">
+
+        <!-- AUTH SECTION -->
+        <section id="auth-section" class="section-container">
+            <div class="auth-card">
+                <div class="auth-tabs">
+                    <button class="tab-btn active" id="tab-user" onclick="switchTab('User')">User Panel</button>
+                    <button class="tab-btn" id="tab-admin" onclick="switchTab('Admin')">Admin Panel</button>
+                </div>
+
+                <div class="auth-content">
+                    <h2 id="auth-title">User Login</h2>
+
+                    <!-- Login Form -->
+                    <form id="login-form" autocomplete="off">
+                        <div class="input-group">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="login-username" placeholder="Username" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="login-password" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="btn primary-btn"><i class="fa-solid fa-right-to-bracket"></i>
+                            Login</button>
+                    </form>
+
+                    <!-- Registration Form (User Only) -->
+                    <form id="register-form" class="hidden" autocomplete="off">
+                        <div class="input-group">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="reg-firstname" placeholder="First Name" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="reg-lastname" placeholder="Last Name" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="fa-solid fa-envelope"></i>
+                            <input type="email" id="reg-email" placeholder="Email Address" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="fa-solid fa-key"></i>
+                            <input type="password" id="reg-password" placeholder="Choose Password" required>
+                        </div>
+                        <button type="submit" class="btn primary-btn"><i class="fa-solid fa-user-check"></i>
+                            Register</button>
+                    </form>
+
+                    <p id="forgot-pwd-text" class="auth-switch" style="margin-bottom: 20px; font-size: 0.9rem;"><span
+                            class="link" onclick="openForgotPasswordModal()">Forgot Password?</span></p>
+
+                    <div class="auth-switch" id="auth-switch-container">
+                        <p id="auth-switch-text">Don't have an account? <span class="link"
+                                onclick="toggleAuthMode()">Create Account</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LIBRARY SECTION -->
+        <section id="library-section" class="section-container hidden">
+            <header class="library-header">
+                <div>
+                    <h2><i class="fa-solid fa-book-open-reader"></i> Library Management</h2>
+                    <p id="welcome-message" class="subtitle">Welcome, User</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn secondary-btn" onclick="logout()"><i
+                            class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                </div>
+            </header>
+
+            <div class="library-tools">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-input" placeholder="Search books by title, author...">
+                </div>
+
+                <!-- Admin Only Actions -->
+                <div class="admin-actions hidden" id="admin-actions">
+                    <button class="btn primary-btn" onclick="openInsertModal()"><i class="fa-solid fa-plus"></i> Add
+                        Book</button>
+                </div>
+
+                <!-- User Actions (like Request Permission) -->
+                <div class="user-actions hidden" id="user-actions">
+                    <button id="request-permission-btn" class="btn secondary-btn" onclick="requestPermission()"><i
+                            class="fa-solid fa-shield-halved"></i> Request Edit Permission</button>
+                </div>
+            </div>
+
+            <!-- Books Table -->
+            <div class="table-container">
+                <table id="books-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>ISBN</th>
+                            <th>Status</th>
+                            <th id="th-actions" class="hidden">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="books-tbody">
+                        <!-- Book rows will be populated here by JS -->
+                        <tr>
+                            <td colspan="6" class="empty-state">Loading books...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Users Management Table (Admin Only) -->
+            <div id="users-container" class="table-container hidden" style="margin-top: 40px;">
+                <h3><i class="fa-solid fa-users"></i> Pending User/Permission Approvals</h3>
+                <div class="auth-tabs" style="justify-content: flex-start; margin-bottom: 15px;">
+                    <button class="tab-btn active" id="tab-pending-users" onclick="switchAdminSubTab('users')">Pending
+                        Users</button>
+                    <button class="tab-btn" id="tab-pending-perms" onclick="switchAdminSubTab('perms')">Permission
+                        Requests</button>
+                </div>
+
+                <!-- Pending Users Table -->
+                <table id="users-table" style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Email/Username</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pending Permissions Table -->
+                <table id="perms-table" class="hidden" style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Email/Username</th>
+                            <th>Request Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="perms-tbody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading permission requests...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Insert/Edit Book Modal -->
+    <div id="book-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Book</h3>
+                <button class="close-btn" onclick="closeBookModal()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="book-form">
+                <input type="hidden" id="book-id">
+                <div class="input-group">
+                    <input type="text" id="book-title" placeholder="Book Title" required>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="book-author" placeholder="Author" required>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="book-isbn" placeholder="ISBN" required>
+                </div>
+                <div class="input-group">
+                    <select id="book-status"
+                        style="width: 100%; padding: 14px 15px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 1rem; outline: none;">
+                        <option value="true">Available</option>
+                        <option value="false">Unavailable</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn secondary-btn" onclick="closeBookModal()">Cancel</button>
+                    <button type="submit" class="btn primary-btn" id="save-book-btn">Save Book</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgot-password-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="fp-modal-title">Reset Password</h3>
+                <button class="close-btn" onclick="closeForgotPasswordModal()"><i
+                        class="fa-solid fa-times"></i></button>
+            </div>
+
+            <!-- Admin Reset Form -->
+            <form id="fp-admin-form" class="hidden">
+                <div class="input-group">
+                    <i class="fa-solid fa-star"></i>
+                    <input type="number" id="fp-fav-number" placeholder="Enter Favourite Number" required>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="fp-admin-new-pwd" placeholder="New Password" required>
+                </div>
+                <button type="submit" class="btn primary-btn">Reset Password</button>
+            </form>
+
+            <!-- User Reset Form (Two-Step: Verify Email, then Reset) -->
+            <form id="fp-user-request-form" class="hidden">
+                <!-- Step 1: Email Request -->
+                <div id="fp-step-email">
+                    <p style="margin-bottom: 15px; font-size: 0.95rem; color: var(--text-secondary);">Enter your
+                        registered email address to receive a password reset link.</p>
+                    <div class="input-group">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" id="fp-user-email" placeholder="Email Address" required>
+                    </div>
+                    <button type="button" class="btn primary-btn" id="fp-verify-email-btn"
+                        onclick="requestUserPasswordReset()">
+                        <i class="fa-solid fa-paper-plane"></i> Send Reset Link
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
