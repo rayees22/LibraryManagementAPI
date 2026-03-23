@@ -69,7 +69,11 @@ using (var scope = app.Services.CreateScope())
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Library API V1");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseCors();
 
@@ -81,7 +85,7 @@ app.MapControllers();
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 app.Urls.Add("http://*:" + port);
 
-app.MapGet("/", () => "LibraryManagementAPI is running successfully 🚀");
+app.MapGet("/", () => Results.Redirect("/swagger"));
 app.MapGet("/health", () => new { status = "OK", message = "API is healthy" });
 
 app.Run();
