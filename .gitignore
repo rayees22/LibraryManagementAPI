@@ -1,0 +1,22 @@
+# bin and obj folders
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Development settings
+appsettings.Development.json
+
+# Build outputs
+build.log
+build.txt
+build_output.txt
+error.log
+
+# Mac
+.DS_Store
