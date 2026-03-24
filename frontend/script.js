@@ -36,6 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEnterKeyNavigation();
 });
 
+// Force log out on page refresh or close
+window.addEventListener('beforeunload', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('permissionStatus');
+});
+
 // --- Loading System ---
 const globalLoadingOverlay = document.getElementById('global-loading-overlay');
 const globalLoadingMessage = document.getElementById('loading-message');
@@ -712,17 +719,19 @@ async function submitUserPasswordReset() {
             body: JSON.stringify({ email: email, newPassword: newPwd })
         });
 
-        const resultText = await res.text();
+        let resultText = await res.text();
+        // Strip surrounding quotes if present
+        resultText = resultText.replace(/^"|"$/g, '');
         hideLoading();
         if (res.ok) {
-            showNotification('Password reset successfully! You can now login.');
+            showNotification(resultText || 'Password reset successfully! You can now login.');
             closeForgotPasswordModal();
         } else {
             showNotification(resultText || 'Failed to reset password.', true);
         }
     } catch (e) {
         hideLoading();
-        showNotification('Network error.', true);
+        showNotification('Network error. Please try again.', true);
     }
 }
 

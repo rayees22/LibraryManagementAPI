@@ -254,6 +254,7 @@ form .btn {
     font-size: 2rem;
     background: linear-gradient(90deg, #fff, #a5b4fc);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -473,7 +474,8 @@ tbody tr:last-child td {
 @media (max-width: 768px) {
     .library-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
         gap: 15px;
     }
 
@@ -489,6 +491,32 @@ tbody tr:last-child td {
     th,
     td {
         padding: 12px 10px;
+        font-size: 0.9rem;
+    }
+    
+    .action-btn {
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-content {
+        padding: 20px 15px;
+    }
+
+    .auth-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .modal-card {
+        padding: 20px 15px;
+        width: 92%;
+    }
+
+    .notification-box {
+        padding: 15px 25px;
+        width: 90%;
     }
 }
 
