@@ -1,5 +1,5 @@
 // Base API URL
-const API_BASE = 'https://librarymanagementapi-ldwv.onrender.com/api';
+const API_BASE = 'https://librarymanagementapi-i03b.onrender.com/api';
 
 // State
 let currentAuthTab = 'User';
@@ -663,7 +663,7 @@ function closeForgotPasswordModal() {
 function togglePasswordVisibility(inputId, iconElement) {
     const input = document.getElementById(inputId);
     if (!input) return;
-    
+
     if (input.type === 'password') {
         input.type = 'text';
         iconElement.classList.replace('fa-eye', 'fa-eye-slash');
