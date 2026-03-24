@@ -1,4 +1,4 @@
-﻿namespace LibraryManagementAPI.Models
+namespace LibraryManagementAPI.Models
 {
     public class User
     {

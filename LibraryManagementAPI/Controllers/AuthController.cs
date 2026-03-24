@@ -1,4 +1,4 @@
-﻿using LibraryManagementAPI.Data;
+using LibraryManagementAPI.Data;
 using LibraryManagementAPI.DTOs;
 using LibraryManagementAPI.Models;
 using LibraryManagementAPI.Services;
@@ -41,14 +41,14 @@ namespace LibraryManagementAPI.Controllers
                 Username = request.Email, // Username is mapped to Email
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password), 
                 Role = "User", // Hardcoded to User
-                IsApproved = false,
+                IsApproved = true,
                 PermissionStatus = "None"
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok("Account registered successfully. Pending Admin approval.");
+            return Ok("Account registered successfully.");
         }
 
         [HttpPost("login")]
@@ -92,8 +92,21 @@ namespace LibraryManagementAPI.Controllers
         [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetPendingUsers()
         {
-            var users = await _context.Users.Where(u => u.Role == "User").Select(u => new { u.Id, u.Username, u.IsApproved }).ToListAsync();
+            var users = await _context.Users.Where(u => u.Role == "User").Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, u.Username, u.IsApproved, u.PermissionStatus }).ToListAsync();
             return Ok(users);
+        }
+
+        [HttpDelete("users/{id}")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound("User not found.");
+            if (user.Role == "Admin") return BadRequest("Cannot delete admin account.");
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return Ok("User deleted successfully.");
         }
 
         [HttpPut("approve/{id}")]
@@ -143,6 +156,23 @@ namespace LibraryManagementAPI.Controllers
                 return BadRequest("This email does not exist in the database.");
             }
             return Ok("Email verified successfully.");
+        }
+
+        [HttpPost("reset-password-direct")]
+        public async Task<IActionResult> ResetPasswordDirect([FromBody] ResetPasswordDirectDto request)
+        {
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower() && u.Role == "User");
+            if (user == null)
+                return BadRequest("User not found.");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            
+            // Invalidate the reset token if it exists just in case
+            user.ResetToken = null;
+            user.ResetTokenExpiry = null;
+
+            await _context.SaveChangesAsync();
+            return Ok("Password reset successfully. You can now log in.");
         }
 
         [HttpPost("forgot-password-user")]

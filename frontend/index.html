@@ -50,9 +50,10 @@
                             <i class="fa-solid fa-user"></i>
                             <input type="text" id="login-username" placeholder="Username" required>
                         </div>
-                        <div class="input-group">
+                        <div class="input-group" style="position: relative;">
                             <i class="fa-solid fa-lock"></i>
                             <input type="password" id="login-password" placeholder="Password" required>
+                            <i class="fa-solid fa-eye eye-icon" onclick="togglePasswordVisibility('login-password', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-secondary);"></i>
                         </div>
                         <button type="submit" class="btn primary-btn"><i class="fa-solid fa-right-to-bracket"></i>
                             Login</button>
@@ -72,9 +73,10 @@
                             <i class="fa-solid fa-envelope"></i>
                             <input type="email" id="reg-email" placeholder="Email Address" required>
                         </div>
-                        <div class="input-group">
+                        <div class="input-group" style="position: relative;">
                             <i class="fa-solid fa-key"></i>
                             <input type="password" id="reg-password" placeholder="Choose Password" required>
+                            <i class="fa-solid fa-eye eye-icon" onclick="togglePasswordVisibility('reg-password', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-secondary);"></i>
                         </div>
                         <button type="submit" class="btn primary-btn"><i class="fa-solid fa-user-check"></i>
                             Register</button>
@@ -159,15 +161,16 @@
                 <table id="users-table" style="margin-top: 15px;">
                     <thead>
                         <tr>
-                            <th>User ID</th>
-                            <th>Email/Username</th>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="users-tbody">
                         <tr>
-                            <td colspan="4" class="empty-state">Loading users...</td>
+                            <td colspan="5" class="empty-state">Loading users...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -241,9 +244,10 @@
                     <i class="fa-solid fa-star"></i>
                     <input type="number" id="fp-fav-number" placeholder="Enter Favourite Number" required>
                 </div>
-                <div class="input-group">
+                <div class="input-group" style="position: relative;">
                     <i class="fa-solid fa-lock"></i>
                     <input type="password" id="fp-admin-new-pwd" placeholder="New Password" required>
+                    <i class="fa-solid fa-eye eye-icon" onclick="togglePasswordVisibility('fp-admin-new-pwd', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-secondary);"></i>
                 </div>
                 <button type="submit" class="btn primary-btn">Reset Password</button>
             </form>
@@ -253,14 +257,26 @@
                 <!-- Step 1: Email Request -->
                 <div id="fp-step-email">
                     <p style="margin-bottom: 15px; font-size: 0.95rem; color: var(--text-secondary);">Enter your
-                        registered email address to receive a password reset link.</p>
+                        registered email address.</p>
                     <div class="input-group">
                         <i class="fa-solid fa-envelope"></i>
                         <input type="email" id="fp-user-email" placeholder="Email Address" required>
                     </div>
                     <button type="button" class="btn primary-btn" id="fp-verify-email-btn"
                         onclick="requestUserPasswordReset()">
-                        <i class="fa-solid fa-paper-plane"></i> Send Reset Link
+                        <i class="fa-solid fa-arrow-right"></i> Next
+                    </button>
+                </div>
+                <!-- Step 2: New Password -->
+                <div id="fp-step-password" class="hidden">
+                    <p style="margin-bottom: 15px; font-size: 0.95rem; color: var(--text-secondary);">Enter your new password.</p>
+                    <div class="input-group" style="position: relative;">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="fp-user-new-pwd" placeholder="New Password" required>
+                        <i class="fa-solid fa-eye eye-icon" onclick="togglePasswordVisibility('fp-user-new-pwd', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-secondary);"></i>
+                    </div>
+                    <button type="button" class="btn primary-btn" id="fp-reset-pwd-btn" onclick="submitUserPasswordReset()">
+                        <i class="fa-solid fa-check"></i> Reset Password
                     </button>
                 </div>
             </form>

@@ -452,11 +452,11 @@ async function fetchUsers() {
             const users = await response.json();
             renderUsersTable(users);
         } else {
-            usersTbody.innerHTML = `<tr><td colspan="4" class="empty-state" style="color:var(--secondary-color)">Failed to load users.</td></tr>`;
+            usersTbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:var(--secondary-color)">Failed to load users.</td></tr>`;
         }
     } catch (err) {
         hideLoading();
-        usersTbody.innerHTML = `<tr><td colspan="4" class="empty-state" style="color:var(--secondary-color)">Error fetching users.</td></tr>`;
+        usersTbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:var(--secondary-color)">Error fetching users.</td></tr>`;
     }
 }
 
@@ -465,7 +465,7 @@ function renderUsersTable(users) {
     usersTbody.innerHTML = '';
 
     if (users.length === 0) {
-        usersTbody.innerHTML = `<tr><td colspan="4" class="empty-state">No users pending or found.</td></tr>`;
+        usersTbody.innerHTML = `<tr><td colspan="5" class="empty-state">No users found.</td></tr>`;
         return;
     }
 
@@ -475,13 +475,18 @@ function renderUsersTable(users) {
             ? '<span style="color:var(--success-color)"><i class="fa-solid fa-check"></i> Approved</span>'
             : '<span style="color:var(--secondary-color)"><i class="fa-solid fa-clock"></i> Pending</span>';
 
-        const actionHtml = user.isApproved
-            ? `<button class="action-btn" disabled style="background:#4b5563;cursor:not-allowed">Approved</button>`
-            : `<button class="action-btn primary-btn" onclick="approveUser(${user.id})" style="padding: 4px 10px; font-size: 0.8rem">Approve</button>`;
+        let actionHtml = '';
+        if (!user.isApproved) {
+            actionHtml += `<button class="action-btn primary-btn" onclick="approveUser(${user.id})" style="padding: 4px 10px; font-size: 0.8rem; margin-right: 5px;">Approve</button>`;
+        }
+        actionHtml += `<button class="action-btn delete-btn" onclick="deleteUser(${user.id})" style="padding: 4px 10px; font-size: 0.8rem"><i class="fa-solid fa-trash"></i> Delete</button>`;
+
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
 
         tr.innerHTML = `
             <td>#${user.id}</td>
-            <td><strong>${user.username}</strong></td>
+            <td><strong>${fullName}</strong></td>
+            <td>${user.email || user.username}</td>
             <td>${statusHtml}</td>
             <td>${actionHtml}</td>
         `;
@@ -503,6 +508,26 @@ async function approveUser(id) {
     } catch (err) {
         hideLoading();
         showNotification('Network error approving user', true);
+    }
+}
+
+async function deleteUser(id) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+
+    showLoading('Deleting user...');
+    try {
+        const response = await apiFetch(`/auth/users/${id}`, { method: 'DELETE' });
+        hideLoading();
+        if (response.ok) {
+            showNotification('User deleted successfully');
+            fetchUsers(); // refresh table
+        } else {
+            const err = await response.text();
+            showNotification(err || 'Failed to delete user', true);
+        }
+    } catch (err) {
+        hideLoading();
+        showNotification('Network error deleting user', true);
     }
 }
 
@@ -616,6 +641,9 @@ function openForgotPasswordModal() {
     } else {
         fpUserReqForm.classList.remove('hidden');
         document.getElementById('fp-step-email').classList.remove('hidden');
+        if (document.getElementById('fp-step-password')) {
+            document.getElementById('fp-step-password').classList.add('hidden');
+        }
     }
 }
 
@@ -625,6 +653,19 @@ function closeForgotPasswordModal() {
     fpUserReqForm.reset();
 }
 
+function togglePasswordVisibility(inputId, iconElement) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        iconElement.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        iconElement.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
 async function requestUserPasswordReset() {
     const email = document.getElementById('fp-user-email').value;
     if (!email) {
@@ -632,9 +673,9 @@ async function requestUserPasswordReset() {
         return;
     }
 
-    showLoading('Sending link...');
+    showLoading('Checking email...');
     try {
-        const res = await fetch(`${API_BASE}/auth/forgot-password-user`, {
+        const res = await fetch(`${API_BASE}/auth/check-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email })
@@ -643,10 +684,41 @@ async function requestUserPasswordReset() {
         const resultText = await res.text();
         hideLoading();
         if (res.ok) {
-            showNotification(resultText || 'Reset link sent!');
+            // Email exists, proceed to Step 2
+            document.getElementById('fp-step-email').classList.add('hidden');
+            document.getElementById('fp-step-password').classList.remove('hidden');
+        } else {
+            showNotification(resultText || 'Email not found in database.', true);
+        }
+    } catch (e) {
+        hideLoading();
+        showNotification('Network error.', true);
+    }
+}
+
+async function submitUserPasswordReset() {
+    const email = document.getElementById('fp-user-email').value;
+    const newPwd = document.getElementById('fp-user-new-pwd').value;
+    if (!newPwd) {
+        showNotification('Please enter a new password.', true);
+        return;
+    }
+
+    showLoading('Resetting password...');
+    try {
+        const res = await fetch(`${API_BASE}/auth/reset-password-direct`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, newPassword: newPwd })
+        });
+
+        const resultText = await res.text();
+        hideLoading();
+        if (res.ok) {
+            showNotification('Password reset successfully! You can now login.');
             closeForgotPasswordModal();
         } else {
-            showNotification(resultText || 'Failed to send reset link.', true);
+            showNotification(resultText || 'Failed to reset password.', true);
         }
     } catch (e) {
         hideLoading();
